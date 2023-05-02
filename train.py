@@ -27,6 +27,8 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--num_classes', type=int, default=2, help="Specify number of classes")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--not_pretrained', action='store_true', help='do not use pretrained_model')
+    commandLineParser.add_argument('--regularize', action='store_true', help='add parameter regularization for adv training')
+    commandLineParser.add_argument('--reg_type', type=str, default='singular_ratio', help='regularization type to apply if regularize is true')
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
@@ -67,4 +69,4 @@ if __name__ == "__main__":
 
     # Train
     trainer = Trainer(device, model, optimizer, criterion, scheduler)
-    trainer.train_process(train_data, val_data, out_file, max_epochs=args.epochs, bs=args.bs)
+    trainer.train_process(train_data, val_data, out_file, max_epochs=args.epochs, bs=args.bs, reg=args.reg_type if args.regularize else None)

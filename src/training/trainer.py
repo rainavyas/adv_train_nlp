@@ -16,7 +16,7 @@ class Trainer():
         self.scheduler = scheduler
     
     @staticmethod
-    def train(train_loader, model, criterion, optimizer, epoch, device, print_freq=25):
+    def train(train_loader, model, criterion, optimizer, epoch, device, print_freq=25, reg=None):
         '''
         Run one train epoch
         '''
@@ -34,6 +34,7 @@ class Trainer():
             # Forward pass
             logits = model(ids, mask)
             loss = criterion(logits, y)
+            loss += loss_reg(regularization, model) if reg is not None
 
             # Backward pass and update
             optimizer.zero_grad()
@@ -100,7 +101,7 @@ class Trainer():
         dl = DataLoader(ds, batch_size=bs, shuffle=shuffle)
         return dl
     
-    def train_process(self, train_data, val_data, save_path, max_epochs=10, bs=8):
+    def train_process(self, train_data, val_data, save_path, max_epochs=10, bs=8, reg=None):
 
         train_dl = self.prep_dl(self.model, train_data, bs=bs, shuffle=True)
         val_dl = self.prep_dl(self.model, val_data, bs=bs, shuffle=True)
@@ -109,7 +110,7 @@ class Trainer():
         for epoch in range(max_epochs):
             # train for one epoch
             print_log('current lr {:.5e}'.format(self.optimizer.param_groups[0]['lr']))
-            self.train(train_dl, self.model, self.criterion, self.optimizer, epoch, self.device)
+            self.train(train_dl, self.model, self.criterion, self.optimizer, epoch, self.device, reg=reg)
             self.scheduler.step()
 
             # evaluate on validation set
