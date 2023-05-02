@@ -2,6 +2,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch 
 
 from ..tools.tools import AverageMeter, accuracy_topk, print_log
+from .regularization import loss_reg
 
 
 class Trainer():
@@ -16,7 +17,7 @@ class Trainer():
         self.scheduler = scheduler
     
     @staticmethod
-    def train(train_loader, model, criterion, optimizer, epoch, device, print_freq=25, reg=None):
+    def train(train_loader, model, criterion, optimizer, epoch, device, print_freq=25, reg=None, reg_beta=1.0):
         '''
         Run one train epoch
         '''
@@ -34,7 +35,7 @@ class Trainer():
             # Forward pass
             logits = model(ids, mask)
             loss = criterion(logits, y)
-            loss += loss_reg(regularization, model) if reg is not None
+            if reg is not None: loss += reg_beta*loss_reg(reg, model)
 
             # Backward pass and update
             optimizer.zero_grad()
@@ -101,7 +102,7 @@ class Trainer():
         dl = DataLoader(ds, batch_size=bs, shuffle=shuffle)
         return dl
     
-    def train_process(self, train_data, val_data, save_path, max_epochs=10, bs=8, reg=None):
+    def train_process(self, train_data, val_data, save_path, max_epochs=10, bs=8, reg=None, reg_beta=1.0):
 
         train_dl = self.prep_dl(self.model, train_data, bs=bs, shuffle=True)
         val_dl = self.prep_dl(self.model, val_data, bs=bs, shuffle=True)
@@ -110,7 +111,7 @@ class Trainer():
         for epoch in range(max_epochs):
             # train for one epoch
             print_log('current lr {:.5e}'.format(self.optimizer.param_groups[0]['lr']))
-            self.train(train_dl, self.model, self.criterion, self.optimizer, epoch, self.device, reg=reg)
+            self.train(train_dl, self.model, self.criterion, self.optimizer, epoch, self.device, reg=reg, reg_beta=reg_beta)
             self.scheduler.step()
 
             # evaluate on validation set

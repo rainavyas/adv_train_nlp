@@ -29,6 +29,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--not_pretrained', action='store_true', help='do not use pretrained_model')
     commandLineParser.add_argument('--regularize', action='store_true', help='add parameter regularization for adv training')
     commandLineParser.add_argument('--reg_type', type=str, default='singular_ratio', help='regularization type to apply if regularize is true')
+    commandLineParser.add_argument('--reg_beta', type=float, default=1.0, help="Specify beta parameter for reg loss")
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
@@ -69,4 +70,4 @@ if __name__ == "__main__":
 
     # Train
     trainer = Trainer(device, model, optimizer, criterion, scheduler)
-    trainer.train_process(train_data, val_data, out_file, max_epochs=args.epochs, bs=args.bs, reg=args.reg_type if args.regularize else None)
+    trainer.train_process(train_data, val_data, out_file, max_epochs=args.epochs, bs=args.bs, reg=args.reg_type if args.regularize else None, reg_beta=args.reg_beta)
